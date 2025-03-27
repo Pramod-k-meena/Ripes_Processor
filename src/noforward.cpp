@@ -226,8 +226,9 @@ void Execute::process(const int i) {
     if (processor->getID_EX().instruction) {
         if (processor->pipelineMatrix[(pc / 4)][i] == "   WB   ;") {
             processor->pipelineMatrix[(pc / 4)][i] = "  EX/WB ;";
+        }else {
+            processor->pipelineMatrix[(pc / 4)][i] = "   EX   ;";
         }
-        processor->pipelineMatrix[(pc / 4)][i] = "   EX   ;";
     }
 }
 

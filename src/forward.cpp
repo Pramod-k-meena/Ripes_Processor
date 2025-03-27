@@ -246,8 +246,9 @@ void Execute::process(const int i) {
     if (processor->getID_EX().instruction) {
         if (processor->pipelineMatrix[(pc / 4)][i] == "   WB   ;") {
             processor->pipelineMatrix[(pc / 4)][i] = "  EX/WB ;";
+        }else{
+            processor->pipelineMatrix[(pc / 4)][i] = "   EX   ;";
         }
-        processor->pipelineMatrix[(pc / 4)][i] = "   EX   ;";
     }
 }
 
@@ -527,6 +528,7 @@ bool Processor::checkForHazards() {
     // Check for ALU instruction feeding into branch/JALR
     if ((opcode == 0b1100011 || opcode == 0b1100111) && // Branch or JALR
         getID_EX().wb.regWrite && getID_EX().rd != 0 && 
+        // !getID_EX().mem.jump && getID_EX().mem.branch &&
         ((getID_EX().rd == rs1) || (opcode == 0b1100011 && getID_EX().rd == rs2))) {
         // Signal a hazard when an instruction in ID/EX is writing to a register
         // that this branch/JALR in IF/ID needs to read
