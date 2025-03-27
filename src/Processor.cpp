@@ -290,11 +290,11 @@ void Processor::print_pipeline(int cycles, bool forwardingEnabled, const string&
     outFile << "Cycle Count      :";
     for (int i = 0; i < cycles; i++) {
         if (i < 10) {
-            outFile << "   " << i << "   ";
+            outFile << "    " << i << "    ";
         } else if (i < 100) {
-            outFile << "  " << i << "   ";
+            outFile << "   " << i << "    ";
         } else {
-            outFile << "  " << i << "  ";
+            outFile << "   " << i << "   ";
         }
     }
     outFile << endl;
@@ -306,8 +306,8 @@ void Processor::print_pipeline(int cycles, bool forwardingEnabled, const string&
         outFile << left << setw(17) << instrStr << ":";
         string prev = "";
         for (const auto& stage : entry.second) {
-            if (prev != "      ;" && prev == stage) {
-                outFile << "  -   ;";
+            if (prev != "        ;" && prev == stage) {
+                outFile << "   -    ;";
             } else {
                 outFile << stage;
             }
@@ -315,6 +315,16 @@ void Processor::print_pipeline(int cycles, bool forwardingEnabled, const string&
         }
         outFile << endl;
     }
+    // cout << "\nRegister Values:" << endl;
+    // for (int i = 0; i < 32; i++) {
+    //     cout << "x" << i << " = " << getRegister(i);
+    //     // Print in columns of 4 registers per line
+    //     if (i % 4 == 3 || i == 31) {
+    //         cout << endl;
+    //     } else {
+    //         cout << "\t";
+    //     }
+    // }
     outFile.close();
 }
 
@@ -370,7 +380,7 @@ void Processor::loadInstructions(const string& filename, const int cyclecount) {
         uint32_t binInstruction = stoul(hexCode, nullptr, 16);
         // Store in memory.
         instructionMemory[address] = binInstruction;
-        pipelineMatrix[(address / 4)] = vector<string>(cyclecount, "      ;");
+        pipelineMatrix[(address / 4)] = vector<string>(cyclecount, "        ;");
         // Store the full instruction string.
         instructionLines.push_back(make_pair(address, fullInstruction));
         address += 4; // Each instruction is 4 bytes.

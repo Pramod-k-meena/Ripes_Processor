@@ -102,7 +102,7 @@ def process_input_files(input_dir, src_dir, output_dir):
                     cwd=src_dir  # Change cwd here as well
                 )
                 
-                time.sleep(1)
+                time.sleep(0.1)
                 
                 possible_paths = [
                     os.path.join(output_dir, f"{base_filename}_no_forward_out.txt"),

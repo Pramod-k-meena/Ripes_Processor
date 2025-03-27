@@ -10,21 +10,25 @@ using namespace std;
 
 
 void InstructionFetch::process(const int i) {
-    if (processor->hazard_in_id) {
-        return;
+    if((processor->getPC()) % 4 != 0){
+        exit(0);
     }
-
     if (processor->getPC() < 4 * processor->getnoofinstructions()) {
         // Update pipeline matrix display
-        if (processor->pipelineMatrix[((processor->getPC()) / 4)][i] == "  MEM ;") {
-            processor->pipelineMatrix[((processor->getPC()) / 4)][i] = "IF/MEM;";
-        } else if (processor->pipelineMatrix[((processor->getPC()) / 4)][i] == "  WB  ;") {
-            processor->pipelineMatrix[((processor->getPC()) / 4)][i] = " IF/WB;";
-        } else if (processor->pipelineMatrix[((processor->getPC()) / 4)][i] == "  EX  ;") {
-            processor->pipelineMatrix[((processor->getPC()) / 4)][i] = " IF/EX;";
+        if (processor->pipelineMatrix[((processor->getPC()) / 4)][i] == "   MEM  ;") {
+            processor->pipelineMatrix[((processor->getPC()) / 4)][i] = " IF/MEM ;";
+        } else if (processor->pipelineMatrix[((processor->getPC()) / 4)][i] == "   WB   ;") {
+            processor->pipelineMatrix[((processor->getPC()) / 4)][i] = "  IF/WB ;";
+        } else if (processor->pipelineMatrix[((processor->getPC()) / 4)][i] == "   EX   ;") {
+            processor->pipelineMatrix[((processor->getPC()) / 4)][i] = "  IF/EX ;";
+        } else if(processor->pipelineMatrix[((processor->getPC()) / 4)][i] == "  EX/WB ;") {
+            processor->pipelineMatrix[((processor->getPC()) / 4)][i] = "IF/EX/WB;";
         } else {
-            processor->pipelineMatrix[((processor->getPC()) / 4)][i] = "  IF  ;";
+            processor->pipelineMatrix[((processor->getPC()) / 4)][i] = "   IF   ;";
         }
+    }
+    if (processor->hazard_in_id) {
+        return;
     }
     // Fetch instruction at current PC
     uint32_t instruction = processor->getInstruction(processor->getPC());
@@ -60,12 +64,12 @@ void InstructionDecode::process(const int i) {
 
     int32_t rd = (instruction >> 7) & 0x1F;
     if (processor->getIF_ID().instruction) {
-        if (processor->pipelineMatrix[(pc / 4)][i] == "  WB  ;") {
-            processor->pipelineMatrix[(pc / 4)][i] = "ID/WB ;";
-        } else if (processor->pipelineMatrix[(pc / 4)][i] == "  MEM ;") {
-            processor->pipelineMatrix[(pc / 4)][i] = "ID/MEM;";
+        if (processor->pipelineMatrix[(pc / 4)][i] == "   WB   ;") {
+            processor->pipelineMatrix[(pc / 4)][i] = " ID/WB ;";
+        } else if (processor->pipelineMatrix[(pc / 4)][i] == "   MEM  ;") {
+            processor->pipelineMatrix[(pc / 4)][i] = " ID/MEM ;";
         } else {
-            processor->pipelineMatrix[(pc / 4)][i] = "  ID  ;";
+            processor->pipelineMatrix[(pc / 4)][i] = "   ID   ;";
         }
     }
 
@@ -92,7 +96,7 @@ void InstructionDecode::process(const int i) {
     // If the IF/ID stage is stalled, just propagate the stall
     if (processor->getIF_ID().isStall) {
         if (processor->pipelineMatrix.find(pc / 4) != processor->pipelineMatrix.end())
-            processor->pipelineMatrix[(pc / 4)][i] = "      ;";
+            processor->pipelineMatrix[(pc / 4)][i] = "        ;";
         processor->getID_EX().isStall = true;
         return;
     }
@@ -240,11 +244,10 @@ void Execute::process(const int i) {
     processor->getEX_MEM().rs1 = rs1;
     processor->getEX_MEM().rs2 = rs2;
     if (processor->getID_EX().instruction) {
-        if (processor->pipelineMatrix[(pc / 4)][i] == "  WB  ;") {
-            processor->pipelineMatrix[(pc / 4)][i] = " EX/WB;";
-        } else {
-            processor->pipelineMatrix[(pc / 4)][i] = "  EX  ;";
+        if (processor->pipelineMatrix[(pc / 4)][i] == "   WB   ;") {
+            processor->pipelineMatrix[(pc / 4)][i] = "  EX/WB ;";
         }
+        processor->pipelineMatrix[(pc / 4)][i] = "   EX   ;";
     }
 }
 
@@ -283,7 +286,7 @@ void MemoryAccess::process(const int i) {
     processor->getMEM_WB().pc = pc;
 
     if (processor->getEX_MEM().instruction) {
-        processor->pipelineMatrix[(pc / 4)][i] = "  MEM ;";
+        processor->pipelineMatrix[(pc / 4)][i] = "   MEM  ;";
     }
 }
 
@@ -301,15 +304,18 @@ void WriteBack::process(const int i) {
     if (processor->getMEM_WB().isStall) {
         return;
     }
-
     // Write back to register file
-    if (regWrite && rd != 0) { // Don't write to x0
+    uint32_t opcode = processor->getMEM_WB().instruction & 0x7F;
+    bool is_jump = (opcode == 0b1101111 || opcode == 0b1100111); // JAL or JALR
+    
+    // Only perform normal register writeback if not a jump instruction
+    if (regWrite && rd != 0 && !is_jump) { // Don't write to x0 or if it's JAL/JALR
         int32_t writeData = memToReg ? readData : aluResult;
         processor->setRegister(rd, writeData);
     }
 
     if (processor->getMEM_WB().instruction) {
-        processor->pipelineMatrix[(pc / 4)][i] = "  WB  ;";
+        processor->pipelineMatrix[(pc / 4)][i] = "   WB   ;";
     }
 }
 
@@ -594,6 +600,8 @@ void Processor::run(int cycles, const string& inputFile) {
     for (int i = 1; i < 32; i++) {
         registers[i] = 0;
     }
+    // registers[1] = 2147483632; // x1 = 0x7FFFFFFF
+    // registers[2] = 268435456;
     // Run for specified number of cycles
     for (int i = 0; i < cycles; i++) {
         cycle(i);

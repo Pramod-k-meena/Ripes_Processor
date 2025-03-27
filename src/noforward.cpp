@@ -13,14 +13,16 @@ using namespace std;
 void InstructionFetch::process(const int i) {
     if (processor->getPC() < 4 * processor->getnoofinstructions()) {
         //if already string MM or WB present then please add that string/IF instead of just IF
-        if (processor->pipelineMatrix[((processor->getPC()) / 4)][i] == "  MEM ;") {
-            processor->pipelineMatrix[((processor->getPC()) / 4)][i] = "IF/MEM;";
-        } else if (processor->pipelineMatrix[((processor->getPC()) / 4)][i] == "  WB  ;") {
-            processor->pipelineMatrix[((processor->getPC()) / 4)][i] = " IF/WB;";
-        } else if (processor->pipelineMatrix[((processor->getPC()) / 4)][i] == "  EX  ;") {
-            processor->pipelineMatrix[((processor->getPC()) / 4)][i] = " IF/WB;";
+        if (processor->pipelineMatrix[((processor->getPC()) / 4)][i] == "   MEM  ;") {
+            processor->pipelineMatrix[((processor->getPC()) / 4)][i] = " IF/MEM ;";
+        } else if (processor->pipelineMatrix[((processor->getPC()) / 4)][i] == "   WB   ;") {
+            processor->pipelineMatrix[((processor->getPC()) / 4)][i] = "  IF/WB ;";
+        } else if (processor->pipelineMatrix[((processor->getPC()) / 4)][i] == "   EX   ;") {
+            processor->pipelineMatrix[((processor->getPC()) / 4)][i] = "  IF/EX ;";
+        } else if (processor->pipelineMatrix[((processor->getPC()) / 4)][i] == "  EX/WB ;") {
+            processor->pipelineMatrix[((processor->getPC()) / 4)][i] = "IF/EX/WB;";
         } else {
-            processor->pipelineMatrix[((processor->getPC()) / 4)][i] = "  IF  ;";
+            processor->pipelineMatrix[((processor->getPC()) / 4)][i] = "   IF   ;";
         }
     }
     if (processor->getIF_ID().hazard.is_hazard) {
@@ -55,19 +57,19 @@ void InstructionDecode::process(const int i) {
     }
     int32_t rd = (instruction >> 7) & 0x1F;
     if (processor->getIF_ID().instruction) {
-        if (processor->pipelineMatrix[(pc / 4)][i] == "  WB  ;") {
-            processor->pipelineMatrix[(pc / 4)][i] = "ID/WB ;";
-        } else if (processor->pipelineMatrix[(pc / 4)][i] == "  MEM ;") {
-            processor->pipelineMatrix[(pc / 4)][i] = "ID/MEM;";
+        if (processor->pipelineMatrix[(pc / 4)][i] == "   WB   ;") {
+            processor->pipelineMatrix[(pc / 4)][i] = " ID/WB ;";
+        } else if (processor->pipelineMatrix[(pc / 4)][i] == "   MEM  ;") {
+            processor->pipelineMatrix[(pc / 4)][i] = " ID/MEM ;";
         } else {
-            processor->pipelineMatrix[(pc / 4)][i] = "  ID  ;";
+            processor->pipelineMatrix[(pc / 4)][i] = "   ID   ;";
         }
     }
     // If no instruction (e.g., after branch), just pass stall
     // In InstructionDecode::process, replace the stall section with:
     if (processor->getIF_ID().isStall) {
         if (processor->pipelineMatrix.find(pc / 4) != processor->pipelineMatrix.end())
-            processor->pipelineMatrix[(pc / 4)][i] = "      ;";
+            processor->pipelineMatrix[(pc / 4)][i] = "        ;";
         processor->getID_EX().isStall = true;
         return;
     }
@@ -222,10 +224,10 @@ void Execute::process(const int i) {
     processor->getEX_MEM().isStall = false;
     processor->getEX_MEM().pc = pc;
     if (processor->getID_EX().instruction) {
-        if (processor->pipelineMatrix[(pc / 4)][i] == "  WB  ;") {
-            processor->pipelineMatrix[(pc / 4)][i] = " EX/WB;";
+        if (processor->pipelineMatrix[(pc / 4)][i] == "   WB   ;") {
+            processor->pipelineMatrix[(pc / 4)][i] = "  EX/WB ;";
         }
-        processor->pipelineMatrix[(pc / 4)][i] = "  EX  ;";
+        processor->pipelineMatrix[(pc / 4)][i] = "   EX   ;";
     }
 }
 
@@ -262,7 +264,7 @@ void MemoryAccess::process(const int i) {
     processor->getMEM_WB().isStall = false;
     processor->getMEM_WB().pc = pc;
     if (processor->getEX_MEM().instruction) {
-        processor->pipelineMatrix[(pc / 4)][i] = "  MEM ;";
+        processor->pipelineMatrix[(pc / 4)][i] = "   MEM  ;";
     }
 }
 
@@ -290,7 +292,7 @@ void WriteBack::process(const int i) {
         processor->setRegister(rd, writeData);
     }
     if (processor->getMEM_WB().instruction) {
-        processor->pipelineMatrix[(pc / 4)][i] = "  WB  ;";
+        processor->pipelineMatrix[(pc / 4)][i] = "   WB   ;";
     }
 }
 
@@ -323,6 +325,8 @@ void Processor::run(int cycles, const string& inputFile) {
     for (int i = 1; i < 32; i++) {
         registers[i] = 0;
     }
+    // registers[1] = 2147483632; // x1 = 0x7FFFFFFF
+    // registers[2] = 268435456;
     // Run for specified number of cycles
     for (int i = 0; i < cycles; i++) {
         cycle(i);
