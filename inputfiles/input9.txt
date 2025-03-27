@@ -1,0 +1,10 @@
+10000097        auipc x1 0x10000
+00008093        addi x1 x1 0
+00400113        addi x2 x0 4
+0000a183        lw x3 0 x1
+00408093        addi x1 x1 4
+0000a203        lw x4 0 x1
+00324463        blt x4 x3 8 <skip>
+00020193        addi x3 x4 0
+fff10113        addi x2 x2 -1
+fe0116e3        bne x2 x0 -20 <max_loop>

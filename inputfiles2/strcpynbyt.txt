@@ -1,0 +1,15 @@
+00000293 addi x5 x0 0
+02c2d063 bge x5 x12 32
+00558333 add x6 x11 x5
+00030303 lb x6 0(x6)
+00030a63 beq x6 x0 20
+005503b3 add x7 x10 x5
+00638023 sb x6 0(x7)
+00128293 addi x5 x5 1
+fe5ff06f jal x0 -28
+00c2da63 bge x5 x12 20
+00550333 add x6 x10 x5
+00030023 sb x0 0(x6)
+00128293 addi x5 x5 1
+ff1ff06f jal x0 -16
+00008067 jalr x0 x1 0

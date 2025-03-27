@@ -1,0 +1,10 @@
+000022b7        lui x5 0x2 
+000102b7        lui x5 0x10
+00abc2b7        lui x5 0xabc
+001232b7        lui x5 0x123
+00f002b7        lui x5 0xf00
+1d4c52b7        lui x5 0x1d4c5
+007ff2b7        lui x5 0x7ff
+00bad2b7        lui x5 0xbad
+00caf2b7        lui x5 0xcaf these shoudl be the final values 8192, 65536, 11206656, 1191936, 15728640, 4918945792, 8380416, 12214272, 13295616, 2339424256
+0dead2b7        lui x5 0xdead but my output is coming ....... 8192, 65536, 11255808, 1191936, 15728640, 491540480,  8384512, 12242944, 13299712, 233492480
