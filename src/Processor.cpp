@@ -329,38 +329,51 @@ void Processor::loadInstructions(const string& filename, const int cyclecount) {
     uint32_t address = 0;
     while (getline(inputFile, line)) {
         if (line.empty()) continue;
-        // Parse instruction line
+        
+        // Parse the instruction line from file.
         istringstream iss(line);
         string hexCode;
         iss >> hexCode;
         string fullInstruction;
-        getline(iss, fullInstruction); // Get the remainder of the line
-        // Trim leading whitespace
-        size_t start = fullInstruction.find_first_not_of(" \t");
+        getline(iss, fullInstruction); // Get the remainder of the line.
+
+        // Trim whitespace, newline, and carriage return characters.
+        const string whitespace = " \t\r\n";
+        size_t start = fullInstruction.find_first_not_of(whitespace);
         if (start != string::npos) {
             fullInstruction = fullInstruction.substr(start);
         }
-        // Remove content enclosed in '<' and '>' if it exists
+        size_t end = fullInstruction.find_last_not_of(whitespace);
+        if (end != string::npos) {
+            fullInstruction = fullInstruction.substr(0, end + 1);
+        }
+        
+        // Remove content enclosed in '<' and '>' if it exists.
         size_t anglePos = fullInstruction.find('<');
         if (anglePos != string::npos) {
             size_t endPos = fullInstruction.find('>', anglePos);
             if (endPos != string::npos) {
                 fullInstruction.erase(anglePos, endPos - anglePos + 1);
-                // Optionally trim again if needed
-                size_t newStart = fullInstruction.find_first_not_of(" \t");
-                if (newStart != string::npos) {
-                    fullInstruction = fullInstruction.substr(newStart);
+                // Trim again after removal.
+                start = fullInstruction.find_first_not_of(whitespace);
+                if (start != string::npos) {
+                    fullInstruction = fullInstruction.substr(start);
+                }
+                end = fullInstruction.find_last_not_of(whitespace);
+                if (end != string::npos) {
+                    fullInstruction = fullInstruction.substr(0, end + 1);
                 }
             }
         }
-        // Convert hex to binary
+
+        // Convert hex to binary.
         uint32_t binInstruction = stoul(hexCode, nullptr, 16);
-        // Store in memory
+        // Store in memory.
         instructionMemory[address] = binInstruction;
         pipelineMatrix[(address / 4)] = vector<string>(cyclecount, "      ;");
-        // Store the full instruction string
+        // Store the full instruction string.
         instructionLines.push_back(make_pair(address, fullInstruction));
-        address += 4; // Instructions are 4 bytes each
+        address += 4; // Each instruction is 4 bytes.
     }
     inputFile.close();
 }

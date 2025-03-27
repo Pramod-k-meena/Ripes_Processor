@@ -5,7 +5,7 @@
             "name": "Debug C++",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/forward",
+            "program": "${workspaceFolder}/src/forward",
             "args": [
                 "./inputfiles/input.txt",
                 "25"

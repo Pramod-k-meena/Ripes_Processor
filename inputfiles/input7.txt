@@ -1,6 +1,0 @@
-00a00093        addi x1 x0 10
-00000113        addi x2 x0 0
-00100193        addi x3 x0 1
-00310133        add x2 x2 x3
-00118193        addi x3 x3 1
-fe30dce3        bge x1 x3 -8

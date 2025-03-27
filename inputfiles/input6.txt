@@ -1,6 +1,0 @@
-00200513        addi x10 x0 2
-00a585b3        add x11 x11 x10
-fff50513        addi x10 x10 -1
-00050463        beq x10 x0 8 <exit>
-ff5ff06f        jal x0 -12 <loop>
-00000013        addi x0 x0 0

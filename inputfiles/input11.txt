@@ -1,5 +1,0 @@
-00500093        addi x1 x0 5
-00100113        addi x2 x0 1
-02110133        mul x2 x2 x1
-fff08093        addi x1 x1 -1
-fe009ce3        bne x1 x0 -8 <loop> //crazy as two operation overlaps

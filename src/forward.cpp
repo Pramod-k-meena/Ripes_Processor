@@ -33,6 +33,10 @@ void InstructionFetch::process(const int i) {
     processor->getIF_ID().isStall = false;
     processor->setPC(processor->getPC() + 4);
 
+    if(processor->isBranchTaken() && ((processor->getPC()) == processor->getBranchTarget()+4)) {
+        processor->setBranch(false, 0);
+        return;
+    }
     // If a branch has been taken, flush the IF/ID register
     if (processor->isBranchTaken()) {
         processor->getIF_ID().isStall = true;
